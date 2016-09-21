@@ -13,7 +13,7 @@ data Segment = Seg Pos Pos
 
 data Triangle = Tri Pos Pos Pos
 
-data Polygon = Poly [Pos]
+type Polygon = [Pos]
 
 data Rectangle = Rect Pos Size
 
