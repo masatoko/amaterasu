@@ -4,13 +4,13 @@ import Data.List (sort)
 import Linear.Affine
 import Linear.V2
 import Linear.Vector
-import Data.Maybe (mapMaybe)
+import Data.Maybe (mapMaybe, catMaybes)
 
 import Type
 
 makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos]) -- FieldOfView
 makeFieldOfView eye aOrg aRange polygons boundary = let
-  its = map snd . filter fst $ [(intersectRS ray seg, intersectionRS ray seg) | ray <- raysFromEye, seg <- segs]
+  its = catMaybes [intersectRS ray seg | ray <- raysFromEye, seg <- segs]
   in (as, its)
   where
     aDst = aOrg + aRange

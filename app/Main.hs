@@ -36,7 +36,6 @@ test rnd = do
   let loop eye = do
         SDL.rendererDrawColor rnd $= black
         SDL.clear rnd
-        putStrLn "."
 
         let (as, its) = makeFieldOfView eye angOrg angRange ps boundary
         -- print $ map (\a -> round $ a / pi * 180) as
@@ -59,8 +58,10 @@ test rnd = do
   where
     eye0 = P $ V2 400 300
     boundary = Rect (pure 0) (V2 600 600)
-    ps = [p1]
+    ps = [p1, p2]
     p1 = map P [V2 350 50, V2 500 100, V2 500 200, V2 350 250]
+    p2 = map P [V2 100 100, V2 200 400]
+    p3 = map P [V2 50 50]
     --
     angOrg = 30 / 180 * pi
     angRange = 300 / 180 * pi
