@@ -46,7 +46,7 @@ test rnd = do
 
         -- === Rendering
         -- Environment
-        renderEnv rnd eye ps boundary
+        renderEnv rnd ps boundary
         -- Angle
         forM_ as $ \a -> do
           let v = angle a ^* 1000
@@ -61,8 +61,8 @@ test rnd = do
         renderFov rnd fov
         -- Target
         if target `withinFov` fov
-          then SDL.rendererDrawColor rnd $= V4 255 255 255 200
-          else SDL.rendererDrawColor rnd $= V4 255 255 255 50
+          then SDL.rendererDrawColor rnd $= V4 0 255 255 200
+          else SDL.rendererDrawColor rnd $= V4 0 255 255 50
         drawRect rnd target
         -- ===
 
@@ -77,9 +77,8 @@ test rnd = do
     eye0 = P $ V2 300 300
     boundary = Rect (pure 100) (pure 400)
     ps = [p1, p2]
-    p1 = map P [V2 350 150, V2 400 200, V2 450 300, V2 350 350]
-    p2 = map P [V2 200 200, V2 200 400]
-    p3 = map P [V2 50 50]
+    p1 = map P [V2 200 250, V2 400 200, V2 450 300, V2 350 350]
+    p2 = map P [V2 150 200, V2 200 400]
     angRange = 300 / 180 * pi
     --
     target = Rect (P (V2 450 150)) (pure 30)
@@ -109,13 +108,10 @@ yellow = V4 255 255 0 255
 
 -----
 
-renderEnv :: SDL.Renderer -> Pos -> [Polygon] -> Rectangle -> IO ()
-renderEnv r pos polys boundary = do
+renderEnv :: SDL.Renderer -> [Polygon] -> Rectangle -> IO ()
+renderEnv r polys boundary = do
   SDL.rendererDrawColor r $= white
   mapM_ (drawPoint r) $ concat polys
-  --
-  SDL.rendererDrawColor r $= yellow
-  drawPoint r pos
   --
   SDL.rendererDrawColor r $= white
   mapM_ (drawPolygon r) polys
