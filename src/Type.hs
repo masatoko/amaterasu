@@ -74,13 +74,15 @@ isIntersectRS ray@(Ray a1 a2) seg@(Seg b1 b2)
         y = y1 + ramda * (y2 - y1)
 
 isOnRay :: Pos -> Ray -> Bool
-isOnRay pos (Ray r0 r1) = dist < 0.1
+isOnRay pos (Ray r0 r1) =
+  innerProduct >= 0 && dist < 0.1
   where
     P va = r1 - r0
     P vb = pos - r0
     distA = distance r0 r1
     distB = distance r0 pos
-    theta = acos . min 1 $ va `dot` vb / (distA * distB)
+    innerProduct = va `dot` vb
+    theta = acos . min 1 $ innerProduct / (distA * distB)
     dist = distB * sin theta
 
 cosOfTwoVec :: V2 Double -> V2 Double -> Double

@@ -1,7 +1,5 @@
 module Amaterasu where
 
-import Debug.Trace (trace)
-
 import Data.List (sort, sortBy, find)
 import Linear.Affine
 import Linear.V2
@@ -19,9 +17,8 @@ makeFieldOfView eye aOrg aRange polygons boundary =
   in fov
 
 makeFieldOfView' :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView)
-makeFieldOfView' eye aOrg aRange polygons boundary = let
-  its = catMaybes [isIntersectRS ray seg | ray <- raysFromEye, seg <- segs]
-  in (as, its, fov)
+makeFieldOfView' eye aOrg aRange polygons boundary =
+  (as, map fst (concat rayIntersections), fov)
   where
     aDst = aOrg + aRange
     withinA a
@@ -46,9 +43,9 @@ makeFieldOfView' eye aOrg aRange polygons boundary = let
     rayIntersections :: [[(Pos, Int)]]
     rayIntersections = map findIntersections raysFromEye
       where
-        findIntersections ray = as
+        findIntersections ray =
+          map reform $ sortBy compE $ mapMaybe work $ zip [0..] segs
           where
-            as = map reform $ sortBy compE $ mapMaybe work $ zip [0..] segs
             work (idx, seg) =
               case isIntersectRS ray seg of
                 Nothing  -> Nothing
@@ -75,8 +72,7 @@ makeFieldOfView' eye aOrg aRange polygons boundary = let
 
 getFov :: Pos -> [[(Pos, Int)]] -> FieldOfView
 getFov eye ass0 =
-  let tris = map (mkTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
-  in Fov eye tris
+  Fov eye $ map (mkTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
   where
     work :: [(Pos, Int)] -> [(Pos, Int)] -> Maybe (Int, Segment)
     work as bs =

@@ -57,7 +57,7 @@ test rnd = do
         unless quit $ loop (fromIntegral <$> pos)
   loop eye0
   where
-    eye0 = P $ V2 400 300
+    eye0 = P $ V2 300 300
     boundary = Rect (pure 100) (pure 400)
     ps = [p1, p2]
     p1 = map P [V2 350 150, V2 400 200, V2 450 300, V2 350 350]
