@@ -12,7 +12,6 @@ import SDL (($=))
 import qualified SDL
 
 import Amaterasu
--- import Type
 
 main :: IO ()
 main = do
@@ -32,43 +31,31 @@ main = do
   SDL.quit
 
 test :: SDL.Renderer -> IO ()
-test rnd = do
-  SDL.present rnd
+test renderer = do
+  SDL.present renderer
   let loop eyeDir eye = do
         es <- SDL.pollEvents
         let eyeDir' = modifyEyeDir eyeDir es
-
-        let angOrg = fromIntegral eyeDir' / 180 * pi
-        SDL.rendererDrawColor rnd $= V4 50 50 50 255
-        SDL.clear rnd
+            angOrg = fromIntegral eyeDir' / 180 * pi
+            
+        SDL.rendererDrawColor renderer $= V4 50 50 50 255
+        SDL.clear renderer
 
         -- 1. Make FieldOfView
         let (as, its, fov) = makeFieldOfView_ eye angOrg angRange ps boundary
 
-        -- === Rendering
-        -- Environment
-        renderEnv rnd ps boundary
-        -- Angle
-        forM_ as $ \a -> do
-          let v = angle a ^* 1000
-              p1 = eye + P v
-          SDL.rendererDrawColor rnd $= V4 255 255 255 50
-          SDL.drawLine rnd (round <$> eye) (round <$> p1)
-        -- Intersections
-        SDL.rendererDrawColor rnd $= V4 255 100 100 255
-        mapM_ (drawPoint rnd) its
-        -- FieldOfView
-        SDL.rendererDrawColor rnd $= V4 255 255 0 200
-        renderFov rnd fov
+        -- Rendering
+        renderEnv renderer ps boundary
+        renderResult renderer eye as its fov
 
         -- 2. Detection - Whether a rectangle is within FieldOfView
         if target `withinFov` fov
-          then SDL.rendererDrawColor rnd $= V4 0 255 255 200
-          else SDL.rendererDrawColor rnd $= V4 0 255 255 50
-        drawRect rnd target
+          then SDL.rendererDrawColor renderer $= V4 0 255 255 200
+          else SDL.rendererDrawColor renderer $= V4 0 255 255 50
+        drawRect renderer target
         -- ===
 
-        SDL.present rnd
+        SDL.present renderer
         SDL.delay 30
         let quit = shouldQuit es
         --
@@ -100,6 +87,20 @@ modifyEyeDir dir es = (dir + dy) `mod` 360
     work _ = 0
 
 -----
+
+renderResult r eye as its fov = do
+  -- Angle
+  forM_ as $ \a -> do
+    let v = angle a ^* 1000
+        p1 = eye + P v
+    SDL.rendererDrawColor r $= V4 255 255 255 50
+    SDL.drawLine r (round <$> eye) (round <$> p1)
+  -- Intersections
+  SDL.rendererDrawColor r $= V4 255 100 100 255
+  mapM_ (drawPoint r) its
+  -- FieldOfView
+  SDL.rendererDrawColor r $= V4 255 255 0 200
+  renderFov r fov
 
 renderEnv :: SDL.Renderer -> [Polygon] -> Rectangle -> IO ()
 renderEnv r polys boundary = do
