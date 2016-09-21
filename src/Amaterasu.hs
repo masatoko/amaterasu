@@ -28,8 +28,7 @@ makeFieldOfView eye aOrg aRange polygons boundary = let
     -- Calculate angles
     ps = rectToSidePoints boundary ++ concat polygons
     as = aOrg : angles ++ [aDst]
-      where
-        angles = sort $ mapMaybe (withinA . angleTo eye) ps
+      where angles = sort $ mapMaybe (withinA . angleTo eye) ps
     raysFromEye =
       map (Ray eye . (eye +) . P . angle) as
 
@@ -42,15 +41,22 @@ makeFieldOfView eye aOrg aRange polygons boundary = let
       where
         findIntersections ray = as
           where
-            as = sortBy (comparing (qd eye . fst)) $ mapMaybe work $ zip [0..] segs
+            as = map reform $ sortBy (comparing eval) $ mapMaybe work $ zip [0..] segs
             work (idx, seg) =
               case isIntersectRS ray seg of
                 Nothing  -> Nothing
-                Just pos -> Just (pos, idx)
+                Just pos -> Just (pos, idx, seg)
+
+            eval (pos, _, Seg p0 p1) = (e0, e1)
+              where
+                e0 = eye `qd` pos
+                P v1 = pos - eye
+                P v2 = if pos == p0 then p1 - p0 else p0 - p1
+                e1 = v1 `cosOfTwoVec` v2
+
+            reform (pos, idx, seg) = (pos, idx)
 
     fov = getFov eye rayIntersections
-
-type PosPair = ((Pos, Int), (Pos, Int))
 
 getFov :: Pos -> [[(Pos, Int)]] -> FieldOfView
 getFov eye ass0 =

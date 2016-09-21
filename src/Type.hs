@@ -74,3 +74,10 @@ isOnRay pos (Ray r0 r1) = dist < 0.1
     distB = distance r0 pos
     theta = acos . min 1 $ va `dot` vb / (distA * distB)
     dist = distB * sin theta
+
+cosOfTwoVec :: V2 Double -> V2 Double -> Double
+cosOfTwoVec va vb = theta
+  where
+    da = distance (pure 0) va
+    db = distance (pure 0) vb
+    theta = min 1 $ va `dot` vb / (da * db)
