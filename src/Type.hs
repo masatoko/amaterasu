@@ -1,7 +1,5 @@
 module Type where
 
-import Debug.Trace (trace)
-
 import Linear.Affine
 import Linear.V2
 import Linear.Metric
@@ -33,8 +31,8 @@ data FieldOfView = Fov Pos [Triangle]
 cross :: Num a => Point V2 a -> Point V2 a -> a
 cross (P (V2 ax ay)) (P (V2 bx by)) = ax * by - ay * bx
 
-intersectRS :: Ray -> Segment -> Maybe Pos
-intersectRS ray@(Ray a1 a2) seg@(Seg b1 b2)
+isIntersectRS :: Ray -> Segment -> Maybe Pos
+isIntersectRS ray@(Ray a1 a2) seg@(Seg b1 b2)
   | dist1       = Just b1
   | dist2       = Just b2
   | condA && condB = Just intersection

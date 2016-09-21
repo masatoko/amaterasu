@@ -37,8 +37,7 @@ test rnd = do
         SDL.rendererDrawColor rnd $= black
         SDL.clear rnd
 
-        let (as, its) = makeFieldOfView eye angOrg angRange ps boundary
-        -- print $ map (\a -> round $ a / pi * 180) as
+        let (as, its, fov) = makeFieldOfView eye angOrg angRange ps boundary
         renderEnv rnd eye ps boundary
         forM_ as $ \a -> do
           let v = angle a ^* 1000
@@ -47,6 +46,8 @@ test rnd = do
           SDL.drawLine rnd (round <$> eye) (round <$> p1)
         SDL.rendererDrawColor rnd $= yellow
         mapM_ (drawPoint rnd) its
+        SDL.rendererDrawColor rnd $= V4 255 0 0 200
+        renderFov rnd fov
 
         SDL.present rnd
         SDL.delay 30
@@ -92,6 +93,17 @@ renderEnv r pos polys boundary = do
   mapM_ (drawPolygon r) polys
   where
     white = V4 255 255 255 100
+
+renderFov :: SDL.Renderer -> FieldOfView -> IO ()
+renderFov r (Fov eye tris) =
+  mapM_ renderTriangle tris
+  where
+    renderTriangle (Tri a b c) = do
+      SDL.drawLine r (f a) (f b)
+      SDL.drawLine r (f b) (f c)
+      SDL.drawLine r (f c) (f a)
+      where
+        f = fmap round
 
 drawPoint :: SDL.Renderer -> Pos -> IO ()
 drawPoint r pos = mapM_ work ps

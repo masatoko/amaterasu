@@ -19,6 +19,8 @@ library
                      , Type
   build-depends:       base >= 4.7 && < 5
                      , linear
+                     , vector
+                     , safe
   default-language:    Haskell2010
 
 executable terasu

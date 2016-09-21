@@ -1,17 +1,20 @@
 module Amaterasu where
 
-import Data.List (sort)
+import Data.List (sort, sortBy, find)
 import Linear.Affine
 import Linear.V2
 import Linear.Vector
-import Data.Maybe (mapMaybe, catMaybes)
+import Linear.Metric
+import Data.Maybe (mapMaybe, catMaybes, fromMaybe)
+import Data.Ord (comparing)
+import Safe (headMay)
 
 import Type
 
-makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos]) -- FieldOfView
+makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView) -- FieldOfView
 makeFieldOfView eye aOrg aRange polygons boundary = let
-  its = catMaybes [intersectRS ray seg | ray <- raysFromEye, seg <- segs]
-  in (as, its)
+  its = catMaybes [isIntersectRS ray seg | ray <- raysFromEye, seg <- segs]
+  in (as, its, fov)
   where
     aDst = aOrg + aRange
     withinA a
@@ -28,10 +31,52 @@ makeFieldOfView eye aOrg aRange polygons boundary = let
       where
         angles = sort $ mapMaybe (withinA . angleTo eye) ps
     raysFromEye =
-      map (Ray eye . (eye +) . (^* 1000) . P . angle) as
+      map (Ray eye . (eye +) . P . angle) as
 
     -- Segments
     segs = rectToSegments boundary ++ concatMap polygonToSegments polygons
+
+    --
+    rayIntersections :: [[(Pos, Int)]]
+    rayIntersections = map findIntersections raysFromEye
+      where
+        findIntersections ray = as
+          where
+            as = sortBy (comparing (qd eye . fst)) $ mapMaybe work $ zip [0..] segs
+            work (idx, seg) =
+              case isIntersectRS ray seg of
+                Nothing  -> Nothing
+                Just pos -> Just (pos, idx)
+
+    fov = getFov eye rayIntersections
+
+type PosPair = ((Pos, Int), (Pos, Int))
+
+getFov :: Pos -> [[(Pos, Int)]] -> FieldOfView
+getFov eye ass0 =
+  let tris = map (mkTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
+  in Fov eye tris
+  where
+    work :: [(Pos, Int)] -> [(Pos, Int)] -> Maybe (Int, Segment)
+    work as bs =
+      headMay $ mapMaybe go as
+      where
+        go a@(p,i) =
+          (\b -> (i, Seg (fst a) (fst b))) <$> find ((== i) . snd) bs
+
+    catSegs :: [(Int, Segment)] -> [(Int, Segment)]
+    catSegs []    = []
+    catSegs [a]   = [a]
+    catSegs (a@(ia,sa):b@(ib,sb):ps)
+      | ia == ib  = catSegs $ (ia, connect sa sb) : ps
+      | otherwise = a : catSegs (b:ps)
+
+    connect :: Segment -> Segment -> Segment
+    connect (Seg a _) (Seg _ b) = Seg a b
+
+    mkTri :: Segment -> Triangle
+    mkTri (Seg a b) = Tri eye a b
+--
 
 rectToSidePoints :: Rectangle -> [Pos]
 rectToSidePoints (Rect (P (V2 x y)) (V2 w h)) =
