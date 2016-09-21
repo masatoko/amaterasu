@@ -33,7 +33,8 @@ main = do
 test :: SDL.Renderer -> IO ()
 test rnd = do
   SDL.present rnd
-  let loop eye = do
+  let loop i eye = do
+        let angOrg = fromIntegral (i `mod` 360) / 180 * pi
         SDL.rendererDrawColor rnd $= V4 50 50 50 255
         SDL.clear rnd
 
@@ -54,8 +55,8 @@ test rnd = do
         quit <- shouldQuit
         --
         pos <- SDL.getAbsoluteMouseLocation
-        unless quit $ loop (fromIntegral <$> pos)
-  loop eye0
+        unless quit $ loop (i + 1) (fromIntegral <$> pos)
+  loop (0::Int) eye0
   where
     eye0 = P $ V2 300 300
     boundary = Rect (pure 100) (pure 400)
@@ -64,7 +65,6 @@ test rnd = do
     p2 = map P [V2 200 200, V2 200 400]
     p3 = map P [V2 50 50]
     --
-    angOrg = 30 / 180 * pi
     angRange = 300 / 180 * pi
 
 shouldQuit :: IO Bool
