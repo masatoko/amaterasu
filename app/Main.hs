@@ -34,7 +34,7 @@ test :: SDL.Renderer -> IO ()
 test rnd = do
   SDL.present rnd
   let loop eye = do
-        SDL.rendererDrawColor rnd $= black
+        SDL.rendererDrawColor rnd $= V4 50 50 50 255
         SDL.clear rnd
 
         let (as, its, fov) = makeFieldOfView eye angOrg angRange ps boundary
@@ -44,9 +44,9 @@ test rnd = do
               p1 = eye + P v
           SDL.rendererDrawColor rnd $= V4 255 255 255 50
           SDL.drawLine rnd (round <$> eye) (round <$> p1)
-        SDL.rendererDrawColor rnd $= yellow
+        SDL.rendererDrawColor rnd $= V4 255 100 100 255
         mapM_ (drawPoint rnd) its
-        SDL.rendererDrawColor rnd $= V4 255 0 0 200
+        SDL.rendererDrawColor rnd $= V4 255 255 0 200
         renderFov rnd fov
 
         SDL.present rnd
@@ -58,10 +58,10 @@ test rnd = do
   loop eye0
   where
     eye0 = P $ V2 400 300
-    boundary = Rect (pure 0) (V2 600 600)
+    boundary = Rect (pure 100) (pure 400)
     ps = [p1, p2]
-    p1 = map P [V2 350 50, V2 500 100, V2 500 200, V2 350 250]
-    p2 = map P [V2 100 100, V2 200 400]
+    p1 = map P [V2 350 150, V2 500 200, V2 500 300, V2 350 350]
+    p2 = map P [V2 200 200, V2 200 400]
     p3 = map P [V2 50 50]
     --
     angOrg = 30 / 180 * pi
@@ -91,6 +91,8 @@ renderEnv r pos polys boundary = do
   --
   SDL.rendererDrawColor r $= white
   mapM_ (drawPolygon r) polys
+  forM_ (rectToSegments boundary) $ \(Seg a b) ->
+    SDL.drawLine r (round <$> a) (round <$> b)
   where
     white = V4 255 255 255 100
 
