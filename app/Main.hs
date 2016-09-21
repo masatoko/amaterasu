@@ -12,7 +12,7 @@ import SDL (($=))
 import qualified SDL
 
 import Amaterasu
-import Type
+-- import Type
 
 main :: IO ()
 main = do
@@ -42,7 +42,8 @@ test rnd = do
         SDL.rendererDrawColor rnd $= V4 50 50 50 255
         SDL.clear rnd
 
-        let (as, its, fov) = makeFieldOfView' eye angOrg angRange ps boundary
+        -- 1. Make FieldOfView
+        let (as, its, fov) = makeFieldOfView_ eye angOrg angRange ps boundary
 
         -- === Rendering
         -- Environment
@@ -59,7 +60,8 @@ test rnd = do
         -- FieldOfView
         SDL.rendererDrawColor rnd $= V4 255 255 0 200
         renderFov rnd fov
-        -- Target
+
+        -- 2. Detection - Whether a rectangle is within FieldOfView
         if target `withinFov` fov
           then SDL.rendererDrawColor rnd $= V4 0 255 255 200
           else SDL.rendererDrawColor rnd $= V4 0 255 255 50
@@ -96,15 +98,6 @@ modifyEyeDir dir es = (dir + dy) `mod` 360
       where
         V2 _ dy = SDL.mouseWheelEventPos dat
     work _ = 0
-
-black :: V4 Word8
-black = V4 0 0 0 255
-
-white :: V4 Word8
-white = V4 255 255 255 255
-
-yellow :: V4 Word8
-yellow = V4 255 255 0 255
 
 -----
 
@@ -145,8 +138,13 @@ drawPolygon r ps@(p0:_) =
     ps' = V.fromList $ map (fmap round) $ ps ++ [p0]
 
 drawRect :: SDL.Renderer -> Rectangle -> IO ()
-drawRect r (Rect (P (V2 x y)) (V2 w h)) =
-  SDL.drawLines r $ V.fromList $ map (fmap round) [p0, p1, p2, p3, p0]
+drawRect r rect =
+  forM_ (rectToSegments rect) $ \(Seg a b) ->
+    SDL.drawLine r (round <$> a) (round <$> b)
+
+rectToSegments :: Rectangle -> [Segment]
+rectToSegments (Rect (P (V2 x y)) (V2 w h)) =
+  [Seg p0 p1, Seg p1 p2, Seg p2 p3, Seg p3 p0]
   where
     p0 = P $ V2 x y
     p1 = P $ V2 (x + w) y

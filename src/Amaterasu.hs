@@ -1,4 +1,16 @@
-module Amaterasu where
+module Amaterasu
+( makeFieldOfView
+, makeFieldOfView_
+, withinFov
+, withinFov'
+--
+, Pos
+, Segment (..)
+, Triangle (..)
+, Polygon (..)
+, Rectangle (..)
+, FieldOfView (..)
+) where
 
 import Data.List (sort, sortBy, find)
 import Linear.Affine
@@ -13,17 +25,17 @@ import Type
 
 makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> FieldOfView
 makeFieldOfView eye aOrg aRange polygons boundary =
-  let (_,_,fov) = makeFieldOfView' eye aOrg aRange polygons boundary
+  let (_,_,fov) = makeFieldOfView_ eye aOrg aRange polygons boundary
   in fov
 
-makeFieldOfView' :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView)
-makeFieldOfView' eye aOrg' aRange polygons boundary =
+makeFieldOfView_ :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView)
+makeFieldOfView_ eye aOrg' aRange polygons boundary =
   (as, map fst (concat rayIntersections), fov)
   where
     adjustAng ang
-      | ang < 0      = adjustAng $ ang + 2 * pi
-      | ang > 2 * pi = adjustAng $ ang - 2 * pi
-      | otherwise    = ang
+      | ang < 0       = adjustAng $ ang + 2 * pi
+      | ang >= 2 * pi = adjustAng $ ang - 2 * pi
+      | otherwise     = ang
     aOrg = adjustAng aOrg'
     aDst = aOrg + aRange
     withinA a
