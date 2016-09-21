@@ -1,5 +1,7 @@
 module Amaterasu where
 
+import Debug.Trace (trace)
+
 import Data.List (sort, sortBy, find)
 import Linear.Affine
 import Linear.V2
@@ -11,8 +13,13 @@ import Safe (headMay)
 
 import Type
 
-makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView) -- FieldOfView
-makeFieldOfView eye aOrg aRange polygons boundary = let
+makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> FieldOfView
+makeFieldOfView eye aOrg aRange polygons boundary =
+  let (_,_,fov) = makeFieldOfView' eye aOrg aRange polygons boundary
+  in fov
+
+makeFieldOfView' :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView)
+makeFieldOfView' eye aOrg aRange polygons boundary = let
   its = catMaybes [isIntersectRS ray seg | ray <- raysFromEye, seg <- segs]
   in (as, its, fov)
   where
@@ -41,11 +48,19 @@ makeFieldOfView eye aOrg aRange polygons boundary = let
       where
         findIntersections ray = as
           where
-            as = map reform $ sortBy (comparing eval) $ mapMaybe work $ zip [0..] segs
+            as = map reform $ sortBy compE $ mapMaybe work $ zip [0..] segs
             work (idx, seg) =
               case isIntersectRS ray seg of
                 Nothing  -> Nothing
                 Just pos -> Just (pos, idx, seg)
+
+            compE a b =
+              case compare a0 b0 of
+                EQ   -> compare a1 b1
+                ord0 -> ord0
+              where
+                (a0, a1) = eval a
+                (b0, b1) = eval b
 
             eval (pos, _, Seg p0 p1) = (e0, e1)
               where
@@ -103,7 +118,10 @@ rectToSegments (Rect (P (V2 x y)) (V2 w h)) =
     p3 = P $ V2 x (y + h)
 
 polygonToSegments :: Polygon -> [Segment]
-polygonToSegments ps =
+polygonToSegments []    = []
+polygonToSegments [_]   = []
+polygonToSegments [a,b] = [Seg a b]
+polygonToSegments ps    =
   seg : zipWith Seg ps (tail ps)
   where
     seg = Seg (last ps) (head ps)

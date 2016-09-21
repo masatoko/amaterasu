@@ -12,15 +12,23 @@ type Angle = Double
 
 --
 
-data Segment = Seg Pos Pos
+data Segment =
+  Seg Pos Pos
+  deriving Show
 
-data Ray = Ray Pos Pos
+data Ray =
+  Ray Pos Pos
+  deriving Show
 
-data Triangle = Tri Pos Pos Pos
+data Triangle =
+  Tri Pos Pos Pos
+  deriving Show
 
 type Polygon = [Pos]
 
-data Rectangle = Rect Pos Size
+data Rectangle =
+  Rect Pos Size
+  deriving Show
 
 --
 

@@ -37,7 +37,7 @@ test rnd = do
         SDL.rendererDrawColor rnd $= V4 50 50 50 255
         SDL.clear rnd
 
-        let (as, its, fov) = makeFieldOfView eye angOrg angRange ps boundary
+        let (as, its, fov) = makeFieldOfView' eye angOrg angRange ps boundary
         renderEnv rnd eye ps boundary
         forM_ as $ \a -> do
           let v = angle a ^* 1000
@@ -60,7 +60,7 @@ test rnd = do
     eye0 = P $ V2 400 300
     boundary = Rect (pure 100) (pure 400)
     ps = [p1, p2]
-    p1 = map P [V2 350 150, V2 500 200, V2 500 300, V2 350 350]
+    p1 = map P [V2 350 150, V2 400 200, V2 450 300, V2 350 350]
     p2 = map P [V2 200 200, V2 200 400]
     p3 = map P [V2 50 50]
     --
