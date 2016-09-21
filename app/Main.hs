@@ -6,6 +6,7 @@ import Control.Monad (when, unless, forM_)
 import Data.Word (Word8)
 import qualified Data.Vector.Storable as V
 import SDL.Vect
+import Data.Maybe (mapMaybe)
 
 import SDL (($=))
 import qualified SDL
@@ -33,8 +34,11 @@ main = do
 test :: SDL.Renderer -> IO ()
 test rnd = do
   SDL.present rnd
-  let loop i eye = do
-        let angOrg = fromIntegral (i `mod` 360) / 180 * pi
+  let loop eyeDir eye = do
+        es <- SDL.pollEvents
+        let eyeDir' = modifyEyeDir eyeDir es
+
+        let angOrg = fromIntegral eyeDir' / 180 * pi
         SDL.rendererDrawColor rnd $= V4 50 50 50 255
         SDL.clear rnd
 
@@ -64,11 +68,11 @@ test rnd = do
 
         SDL.present rnd
         SDL.delay 30
-        quit <- shouldQuit
+        let quit = shouldQuit es
         --
         pos <- SDL.getAbsoluteMouseLocation
-        unless quit $ loop (i + 1) (fromIntegral <$> pos)
-  loop (0::Int) eye0
+        unless quit $ loop eyeDir' (fromIntegral <$> pos)
+  loop 0 eye0
   where
     eye0 = P $ V2 300 300
     boundary = Rect (pure 100) (pure 400)
@@ -80,8 +84,19 @@ test rnd = do
     --
     target = Rect (P (V2 450 150)) (pure 30)
 
-shouldQuit :: IO Bool
-shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload <$> SDL.pollEvents
+shouldQuit :: [SDL.Event] -> Bool
+shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload
+
+modifyEyeDir :: Int -> [SDL.Event] -> Int
+modifyEyeDir dir es = (dir + dy) `mod` 360
+  where
+    dy = sum $ map (work . SDL.eventPayload) es
+
+    work (SDL.MouseWheelEvent dat) =
+      fromIntegral $ 10 * dy
+      where
+        V2 _ dy = SDL.mouseWheelEventPos dat
+    work _ = 0
 
 black :: V4 Word8
 black = V4 0 0 0 255
