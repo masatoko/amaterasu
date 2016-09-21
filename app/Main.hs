@@ -2,7 +2,7 @@
 
 module Main where
 
-import Control.Monad (unless)
+import Control.Monad (unless, forM_)
 import Data.Word (Word8)
 import qualified Data.Vector.Storable as V
 import SDL.Vect
@@ -32,25 +32,36 @@ main = do
 
 test :: SDL.Renderer -> IO ()
 test rnd = do
-  -- makeFieldOfView eye ps boundary
   SDL.present rnd
-  let loop = do
+  let loop eye = do
         SDL.rendererDrawColor rnd $= black
         SDL.clear rnd
         putStrLn "."
 
+        let as = makeFieldOfView eye angOrg angRange ps boundary
+        print $ map (\a -> round $ a / pi * 180) as
         renderEnv rnd eye ps boundary
+        forM_ as $ \a -> do
+          let v = angle a ^* 1000
+              p1 = eye + P v
+          SDL.rendererDrawColor rnd $= V4 255 255 255 50
+          SDL.drawLine rnd (round <$> eye) (round <$> p1)
 
         SDL.present rnd
         SDL.delay 100
         quit <- shouldQuit
-        unless quit loop
-  loop
+        --
+        pos <- SDL.getAbsoluteMouseLocation
+        unless quit $ loop (fromIntegral <$> pos)
+  loop eye0
   where
-    eye = P $ V2 400 300
+    eye0 = P $ V2 400 300
     boundary = Rect (pure 0) (V2 600 600)
     ps = [p1]
     p1 = map P [V2 350 50, V2 500 100, V2 500 200, V2 350 250]
+    --
+    angOrg = 30 / 180 * pi
+    angRange = 300 / 180 * pi
 
 shouldQuit :: IO Bool
 shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload <$> SDL.pollEvents

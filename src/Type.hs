@@ -7,6 +7,8 @@ type Pos = Point V2 Double
 
 type Size = V2 Double
 
+type Angle = Double
+
 --
 
 data Segment = Seg Pos Pos
