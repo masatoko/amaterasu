@@ -38,17 +38,19 @@ test rnd = do
         SDL.clear rnd
         putStrLn "."
 
-        let as = makeFieldOfView eye angOrg angRange ps boundary
-        print $ map (\a -> round $ a / pi * 180) as
+        let (as, its) = makeFieldOfView eye angOrg angRange ps boundary
+        -- print $ map (\a -> round $ a / pi * 180) as
         renderEnv rnd eye ps boundary
         forM_ as $ \a -> do
           let v = angle a ^* 1000
               p1 = eye + P v
           SDL.rendererDrawColor rnd $= V4 255 255 255 50
           SDL.drawLine rnd (round <$> eye) (round <$> p1)
+        SDL.rendererDrawColor rnd $= yellow
+        mapM_ (drawPoint rnd) its
 
         SDL.present rnd
-        SDL.delay 100
+        SDL.delay 30
         quit <- shouldQuit
         --
         pos <- SDL.getAbsoluteMouseLocation
@@ -87,6 +89,8 @@ renderEnv r pos polys boundary = do
   --
   SDL.rendererDrawColor r $= white
   mapM_ (drawPolygon r) polys
+  where
+    white = V4 255 255 255 100
 
 drawPoint :: SDL.Renderer -> Pos -> IO ()
 drawPoint r pos = mapM_ work ps
