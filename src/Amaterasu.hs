@@ -17,16 +17,22 @@ makeFieldOfView eye aOrg aRange polygons boundary =
   in fov
 
 makeFieldOfView' :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView)
-makeFieldOfView' eye aOrg aRange polygons boundary =
+makeFieldOfView' eye aOrg' aRange polygons boundary =
   (as, map fst (concat rayIntersections), fov)
   where
+    adjustAng ang
+      | ang < 0      = adjustAng $ ang + 2 * pi
+      | ang > 2 * pi = adjustAng $ ang - 2 * pi
+      | otherwise    = ang
+    aOrg = adjustAng aOrg'
     aDst = aOrg + aRange
     withinA a
-      | work a    = Just a
-      | work a'   = Just a'
-      | otherwise = Nothing
+      | work a'    = Just a'
+      | work a''   = Just a''
+      | otherwise  = Nothing
       where
-        a' = a + 2 * pi
+        a' = if a < 0 then adjustAng a else a
+        a'' = a' + 2 * pi
         work x = x >= aOrg && x <= aDst
 
     -- Calculate angles
