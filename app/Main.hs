@@ -2,7 +2,7 @@
 
 module Main where
 
-import Control.Monad (unless, forM_)
+import Control.Monad (when, unless, forM_)
 import Data.Word (Word8)
 import qualified Data.Vector.Storable as V
 import SDL.Vect
@@ -39,16 +39,28 @@ test rnd = do
         SDL.clear rnd
 
         let (as, its, fov) = makeFieldOfView' eye angOrg angRange ps boundary
+
+        -- === Rendering
+        -- Environment
         renderEnv rnd eye ps boundary
+        -- Angle
         forM_ as $ \a -> do
           let v = angle a ^* 1000
               p1 = eye + P v
           SDL.rendererDrawColor rnd $= V4 255 255 255 50
           SDL.drawLine rnd (round <$> eye) (round <$> p1)
+        -- Intersections
         SDL.rendererDrawColor rnd $= V4 255 100 100 255
         mapM_ (drawPoint rnd) its
+        -- FieldOfView
         SDL.rendererDrawColor rnd $= V4 255 255 0 200
         renderFov rnd fov
+        -- Target
+        if target `withinFov` fov
+          then SDL.rendererDrawColor rnd $= V4 255 255 255 200
+          else SDL.rendererDrawColor rnd $= V4 255 255 255 50
+        drawRect rnd target
+        -- ===
 
         SDL.present rnd
         SDL.delay 30
@@ -64,8 +76,9 @@ test rnd = do
     p1 = map P [V2 350 150, V2 400 200, V2 450 300, V2 350 350]
     p2 = map P [V2 200 200, V2 200 400]
     p3 = map P [V2 50 50]
-    --
     angRange = 300 / 180 * pi
+    --
+    target = Rect (P (V2 450 150)) (pure 30)
 
 shouldQuit :: IO Bool
 shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload <$> SDL.pollEvents
@@ -119,3 +132,12 @@ drawPolygon r ps@(p0:_) =
   SDL.drawLines r ps'
   where
     ps' = V.fromList $ map (fmap round) $ ps ++ [p0]
+
+drawRect :: SDL.Renderer -> Rectangle -> IO ()
+drawRect r (Rect (P (V2 x y)) (V2 w h)) =
+  SDL.drawLines r $ V.fromList $ map (fmap round) [p0, p1, p2, p3, p0]
+  where
+    p0 = P $ V2 x y
+    p1 = P $ V2 (x + w) y
+    p2 = P $ V2 (x + w) (y + h)
+    p3 = P $ V2 x (y + h)

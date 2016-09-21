@@ -39,8 +39,22 @@ data FieldOfView = Fov Pos [Triangle]
 cross :: Num a => Point V2 a -> Point V2 a -> a
 cross (P (V2 ax ay)) (P (V2 bx by)) = ax * by - ay * bx
 
-isIntersectRS :: Ray -> Segment -> Maybe Pos
-isIntersectRS ray@(Ray a1 a2) seg@(Seg b1 b2)
+isIntersectSeg :: Segment -> Segment -> Bool
+isIntersectSeg (Seg a1 a2) (Seg b1 b2) =
+  condA && condB
+  where
+    a1a2 = a2 - a1
+    a1b1 = b1 - a1
+    a1b2 = b2 - a1
+    condA = (a1a2 `cross` a1b1) * (a1a2 `cross` a1b2) <= 0
+    --
+    b1b2 = b2 - b1
+    b1a1 = a1 - b1
+    b1a2 = a2 - b1
+    condB = (b1b2 `cross` b1a1) * (b1b2 `cross` b1a2) <= 0
+
+intersectionRS :: Ray -> Segment -> Maybe Pos
+intersectionRS ray@(Ray a1 a2) seg@(Seg b1 b2)
   | dist1       = Just b1
   | dist2       = Just b2
   | condA && condB = Just intersection
@@ -91,3 +105,11 @@ cosOfTwoVec va vb = theta
     da = distance (pure 0) va
     db = distance (pure 0) vb
     theta = min 1 $ va `dot` vb / (da * db)
+
+withinTri :: Pos -> Triangle -> Bool
+withinTri p (Tri a b c) =
+  abp * bcp >= 0 && bcp * cap >= 0
+  where
+    abp = (b - a) `cross` (p - b)
+    bcp = (c - b) `cross` (p - c)
+    cap = (a - c) `cross` (p - a)

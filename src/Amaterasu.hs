@@ -47,7 +47,7 @@ makeFieldOfView' eye aOrg aRange polygons boundary =
           map reform $ sortBy compE $ mapMaybe work $ zip [0..] segs
           where
             work (idx, seg) =
-              case isIntersectRS ray seg of
+              case intersectionRS ray seg of
                 Nothing  -> Nothing
                 Just pos -> Just (pos, idx, seg)
 
@@ -93,6 +93,26 @@ getFov eye ass0 =
 
     mkTri :: Segment -> Triangle
     mkTri (Seg a b) = Tri eye a b
+--
+
+withinFov :: Rectangle -> FieldOfView -> Bool
+withinFov rect (Fov _ ts) = condPos
+  where
+    condPos = any work ps
+      where
+        ps = rectToSidePoints rect
+        work p = any (p `withinTri`) ts
+
+withinFov' :: Rectangle -> FieldOfView -> Bool
+withinFov' rect fov@(Fov _ ts) = condPos || condSeg
+  where
+    condPos = withinFov rect fov
+    condSeg =
+      or [isIntersectSeg a b | a <- ssRect, b <- ssTri]
+      where
+        ssRect = rectToSegments rect
+        ssTri = concatMap fromTri ts
+        fromTri (Tri a b c) = [Seg a b, Seg b c, Seg c a]
 --
 
 rectToSidePoints :: Rectangle -> [Pos]
