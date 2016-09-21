@@ -37,7 +37,7 @@ test renderer = do
         es <- SDL.pollEvents
         let eyeDir' = modifyEyeDir eyeDir es
             angOrg = fromIntegral eyeDir' / 180 * pi
-            
+
         SDL.rendererDrawColor renderer $= V4 50 50 50 255
         SDL.clear renderer
 
@@ -49,10 +49,11 @@ test renderer = do
         renderResult renderer eye as its fov
 
         -- 2. Detection - Whether a rectangle is within FieldOfView
-        if target `withinFov` fov
-          then SDL.rendererDrawColor renderer $= V4 0 255 255 200
-          else SDL.rendererDrawColor renderer $= V4 0 255 255 50
-        drawRect renderer target
+        forM_ rs $ \r -> do
+          if r `withinFov` fov
+            then SDL.rendererDrawColor renderer $= V4 255 255 0 200
+            else SDL.rendererDrawColor renderer $= V4 0 0 255 200
+          drawRect renderer r
         -- ===
 
         SDL.present renderer
@@ -70,7 +71,7 @@ test renderer = do
     p2 = map P [V2 150 200, V2 200 400]
     angRange = 300 / 180 * pi
     --
-    target = Rect (P (V2 450 150)) (pure 30)
+    rs = [Rect (P (V2 (50 * x + 100) (50 * y + 100))) (pure 10) | x <- [0..8],y <- [0..8]]
 
 shouldQuit :: [SDL.Event] -> Bool
 shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload
@@ -99,7 +100,7 @@ renderResult r eye as its fov = do
   SDL.rendererDrawColor r $= V4 255 100 100 255
   mapM_ (drawPoint r) its
   -- FieldOfView
-  SDL.rendererDrawColor r $= V4 255 255 0 200
+  SDL.rendererDrawColor r $= V4 0 255 0 200
   renderFov r fov
 
 renderEnv :: SDL.Renderer -> [Polygon] -> Rectangle -> IO ()
