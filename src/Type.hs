@@ -27,12 +27,17 @@ data Triangle =
 type Polygon = [Pos]
 
 data Rectangle =
-  Rect Pos Size
+  Rectangle Pos Size
   deriving Show
 
 --
 
 data FieldOfView = Fov Pos [Triangle]
+
+data Shape -- for export
+  = Point Pos
+  | Rect Pos (V2 Double)
+  deriving Show
 
 ----- modules
 

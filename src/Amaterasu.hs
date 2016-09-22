@@ -2,14 +2,15 @@ module Amaterasu
 ( makeFieldOfView
 , makeFieldOfView_
 , withinFov
-, withinFov'
+, FieldOfView (..)
+, Shape (..)
+-- , withinFov'
 --
 , Pos
 , Segment (..)
 , Triangle (..)
 , Polygon (..)
 , Rectangle (..)
-, FieldOfView (..)
 ) where
 
 import Data.List (sort, sortBy, find)
@@ -113,28 +114,28 @@ getFov eye ass0 =
     mkTri (Seg a b) = Tri eye a b
 --
 
-withinFov :: Rectangle -> FieldOfView -> Bool
-withinFov rect (Fov _ ts) = condPos
+withinFov :: Shape -> FieldOfView -> Bool
+withinFov (Rect pos size) (Fov _ ts) = any work ps
   where
-    condPos = any work ps
-      where
-        ps = rectToSidePoints rect
-        work p = any (p `withinTri`) ts
+    ps = rectToSidePoints $ Rectangle pos size
+    work p = any (p `withinTri`) ts
 
-withinFov' :: Rectangle -> FieldOfView -> Bool
-withinFov' rect fov@(Fov _ ts) = condPos || condSeg
-  where
-    condPos = withinFov rect fov
-    condSeg =
-      or [isIntersectSeg a b | a <- ssRect, b <- ssTri]
-      where
-        ssRect = rectToSegments rect
-        ssTri = concatMap fromTri ts
-        fromTri (Tri a b c) = [Seg a b, Seg b c, Seg c a]
+withinFov (Point pos) (Fov _ ts) = any (pos `withinTri`) ts
+
+-- withinFov' :: Rectangle -> FieldOfView -> Bool
+-- withinFov' rect fov@(Fov _ ts) = condPos || condSeg
+--   where
+--     condPos = withinFov rect fov
+--     condSeg =
+--       or [isIntersectSeg a b | a <- ssRect, b <- ssTri]
+--       where
+--         ssRect = rectToSegments rect
+--         ssTri = concatMap fromTri ts
+--         fromTri (Tri a b c) = [Seg a b, Seg b c, Seg c a]
 --
 
 rectToSidePoints :: Rectangle -> [Pos]
-rectToSidePoints (Rect (P (V2 x y)) (V2 w h)) =
+rectToSidePoints (Rectangle (P (V2 x y)) (V2 w h)) =
   [p0, p1, p2, p3]
   where
     p0 = P $ V2 x y
@@ -143,7 +144,7 @@ rectToSidePoints (Rect (P (V2 x y)) (V2 w h)) =
     p3 = P $ V2 x (y + h)
 
 rectToSegments :: Rectangle -> [Segment]
-rectToSegments (Rect (P (V2 x y)) (V2 w h)) =
+rectToSegments (Rectangle (P (V2 x y)) (V2 w h)) =
   [Seg p0 p1, Seg p1 p2, Seg p2 p3, Seg p3 p0]
   where
     p0 = P $ V2 x y

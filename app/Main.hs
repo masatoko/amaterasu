@@ -49,11 +49,11 @@ test renderer = do
         renderResult renderer eye as its fov
 
         -- 2. Detection - Whether a rectangle is within FieldOfView
-        forM_ rs $ \r -> do
-          if r `withinFov` fov
+        forM_ shapes $ \shape -> do
+          if shape `withinFov` fov
             then SDL.rendererDrawColor renderer $= V4 255 255 0 200
             else SDL.rendererDrawColor renderer $= V4 0 0 255 200
-          drawRect renderer r
+          drawShape renderer shape
         -- ===
 
         SDL.present renderer
@@ -65,13 +65,14 @@ test renderer = do
   loop 0 eye0
   where
     eye0 = P $ V2 300 300
-    boundary = Rect (pure 100) (pure 400)
+    boundary = Rectangle (pure 100) (pure 400)
     ps = [p1, p2]
     p1 = map P [V2 200 250, V2 400 200, V2 450 300, V2 350 350]
     p2 = map P [V2 150 200, V2 200 400]
     angRange = 300 / 180 * pi
     --
-    rs = [Rect (P (V2 (50 * x + 100) (50 * y + 100))) (pure 10) | x <- [0..8],y <- [0..8]]
+    -- shapes = [Rect (P (V2 (50 * x + 100) (50 * y + 100))) (pure 10) | x <- [0..8],y <- [0..8]]
+    shapes = [Point (P (V2 (50 * x + 100) (50 * y + 100))) | x <- [0..8],y <- [0..8]]
 
 shouldQuit :: [SDL.Event] -> Bool
 shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload
@@ -131,7 +132,7 @@ drawPoint r pos = mapM_ work ps
   where
     pos' = round <$> pos
     ps = map (pos' +) [P (V2 dx dy) | dx <- [-3,3], dy <- [-3,3]]
-    work =  SDL.drawLine r pos'
+    work = SDL.drawLine r pos'
 
 drawPolygon :: SDL.Renderer -> Polygon -> IO ()
 drawPolygon r ps@(p0:_) =
@@ -139,13 +140,14 @@ drawPolygon r ps@(p0:_) =
   where
     ps' = V.fromList $ map (fmap round) $ ps ++ [p0]
 
-drawRect :: SDL.Renderer -> Rectangle -> IO ()
-drawRect r rect =
-  forM_ (rectToSegments rect) $ \(Seg a b) ->
+drawShape :: SDL.Renderer -> Shape -> IO ()
+drawShape r (Point pos) = drawPoint r pos
+drawShape r (Rect pos size) =
+  forM_ (rectToSegments $ Rectangle pos size) $ \(Seg a b) ->
     SDL.drawLine r (round <$> a) (round <$> b)
 
 rectToSegments :: Rectangle -> [Segment]
-rectToSegments (Rect (P (V2 x y)) (V2 w h)) =
+rectToSegments (Rectangle (P (V2 x y)) (V2 w h)) =
   [Seg p0 p1, Seg p1 p2, Seg p2 p3, Seg p3 p0]
   where
     p0 = P $ V2 x y
