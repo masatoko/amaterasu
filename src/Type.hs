@@ -113,8 +113,8 @@ cosOfTwoVec va vb = theta
 
 withinTri :: Pos -> Triangle -> Bool
 withinTri p (Tri a b c) =
-  abp * bcp >= 0 && bcp * cap >= 0
+  h * i >= 0 && i * j >= 0 && j * h >= 0
   where
-    abp = (b - a) `cross` (p - b)
-    bcp = (c - b) `cross` (p - c)
-    cap = (a - c) `cross` (p - a)
+    h = (b - a) `cross` (p - b)
+    i = (c - b) `cross` (p - c)
+    j = (a - c) `cross` (p - a)

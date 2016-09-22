@@ -50,10 +50,8 @@ test renderer = do
 
         -- 2. Detection - Whether a rectangle is within FieldOfView
         forM_ shapes $ \shape -> do
-          if shape `withinFov` fov
-            then SDL.rendererDrawColor renderer $= V4 255 255 0 200
-            else SDL.rendererDrawColor renderer $= V4 0 0 255 200
-          drawShape renderer shape
+          SDL.rendererDrawColor renderer $= V4 255 255 0 200
+          when (shape `withinFov` fov) $ drawShape renderer shape
         -- ===
 
         SDL.present renderer
@@ -71,8 +69,7 @@ test renderer = do
     p2 = map P [V2 150 200, V2 200 400]
     angRange = 300 / 180 * pi
     --
-    -- shapes = [Rect (P (V2 (50 * x + 100) (50 * y + 100))) (pure 10) | x <- [0..8],y <- [0..8]]
-    shapes = [Point (P (V2 (50 * x + 100) (50 * y + 100))) | x <- [0..8],y <- [0..8]]
+    shapes = [Point (P (V2 (5 * x) (5 * y))) | x <- [0..100],y <- [0..100]]
 
 shouldQuit :: [SDL.Event] -> Bool
 shouldQuit = elem SDL.QuitEvent . map SDL.eventPayload
@@ -141,7 +138,7 @@ drawPolygon r ps@(p0:_) =
     ps' = V.fromList $ map (fmap round) $ ps ++ [p0]
 
 drawShape :: SDL.Renderer -> Shape -> IO ()
-drawShape r (Point pos) = drawPoint r pos
+drawShape r (Point pos) = SDL.drawPoint r $ round <$> pos
 drawShape r (Rect pos size) =
   forM_ (rectToSegments $ Rectangle pos size) $ \(Seg a b) ->
     SDL.drawLine r (round <$> a) (round <$> b)
