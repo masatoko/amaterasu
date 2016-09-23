@@ -95,7 +95,7 @@ makeFieldOfView_ (Eye eye eyeDir eyeRange) (ObstacleInfo ps segs) =
 
 getFov :: Pos -> [[(Pos, Int)]] -> FieldOfView
 getFov eye ass0 =
-  Fov eye $ V.fromList . map (segToTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
+  Fov eye $ V.fromList . toTriangles . catMaybes $ zipWith work ass0 (tail ass0)
   where
     work :: [(Pos, Int)] -> [(Pos, Int)] -> Maybe (Int, Segment)
     work as bs =
@@ -103,6 +103,8 @@ getFov eye ass0 =
       where
         go a@(p,i) =
           (\b -> (i, Seg (fst a) (fst b))) <$> find ((== i) . snd) bs
+
+    toTriangles = map (segToTri . snd) . filter (not . isPoint . snd) . catSegs
 
     catSegs :: [(Int, Segment)] -> [(Int, Segment)]
     catSegs []    = []
@@ -116,6 +118,9 @@ getFov eye ass0 =
 
     segToTri :: Segment -> Triangle
     segToTri (Seg a b) = mkTri eye a b
+
+    isPoint :: Segment -> Bool
+    isPoint (Seg a b) = a == b
 
 --
 

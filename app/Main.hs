@@ -76,6 +76,9 @@ test renderer = do
     polys = [p1, p2]
     p1 = map P [V2 200 250, V2 400 200, V2 450 300, V2 350 350]
     p2 = map P [V2 150 200, V2 200 400]
+    -- polys = [p3, p4]
+    -- p3 = map P [V2 200 200, V2 200 250]
+    -- p4 = map P [V2 400 400, V2 400 450]
     angRange = 300 / 180 * pi
     --
     shapes = [Point (P (V2 (5 * x) (5 * y))) | x <- [0..100],y <- [0..100]]
