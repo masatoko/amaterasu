@@ -14,6 +14,7 @@ module Amaterasu
 ) where
 
 import Data.List (sort, sortBy, find)
+import qualified Data.Vector.Unboxed as V
 import Linear.Affine
 import Linear.V2
 import Linear.Vector
@@ -82,7 +83,7 @@ makeFieldOfView_ eye aOrg' aRange polygons boundary =
 
 getFov :: Pos -> [[(Pos, Int)]] -> FieldOfView
 getFov eye ass0 =
-  Fov eye $ map (mkTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
+  Fov eye $ V.fromList . map (mkTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
   where
     work :: [(Pos, Int)] -> [(Pos, Int)] -> Maybe (Int, Segment)
     work as bs =
@@ -102,16 +103,20 @@ getFov eye ass0 =
     connect (Seg a _) (Seg _ b) = Seg a b
 
     mkTri :: Segment -> Triangle
-    mkTri (Seg a b) = Tri eye a b
+    mkTri (Seg a b) = (eye, a, b, ea, ab, be)
+      where
+        P ea = a - eye
+        P ab = b - a
+        P be = eye - b
 --
 
 withinFov :: Shape -> FieldOfView -> Bool
 withinFov (Rect pos size) (Fov _ ts) = any work ps
   where
     ps = rectToSidePoints $ Rectangle pos size
-    work p = any (p `withinTri`) ts
+    work p = V.any (p `withinTri`) ts
 
-withinFov (Point pos) (Fov _ ts) = any (pos `withinTri`) ts
+withinFov (Point pos) (Fov _ ts) = V.any (pos `withinTri`) ts
 
 -- withinFov' :: Rectangle -> FieldOfView -> Bool
 -- withinFov' rect fov@(Fov _ ts) = condPos || condSeg

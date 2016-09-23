@@ -1,5 +1,6 @@
 module Type where
 
+import qualified Data.Vector.Unboxed as V
 import Linear.Affine
 import Linear.V2
 import Linear.Metric
@@ -20,9 +21,7 @@ data Ray =
   Ray Pos Pos
   deriving Show
 
-data Triangle =
-  Tri Pos Pos Pos
-  deriving Show
+type Triangle = (Pos, Pos, Pos, V2 Double, V2 Double, V2 Double)
 
 type Polygon = [Pos]
 
@@ -32,7 +31,7 @@ data Rectangle =
 
 --
 
-data FieldOfView = Fov Pos [Triangle]
+data FieldOfView = Fov Pos (V.Vector Triangle)
 
 data Shape -- for export
   = Point Pos
@@ -112,9 +111,9 @@ cosOfTwoVec va vb = theta
     theta = min 1 $ va `dot` vb / (da * db)
 
 withinTri :: Pos -> Triangle -> Bool
-withinTri p (Tri a b c) =
+withinTri p (a, b, c, ab, bc, ca) =
   h * i >= 0 && i * j >= 0 && j * h >= 0
   where
-    h = (b - a) `cross` (p - b)
-    i = (c - b) `cross` (p - c)
-    j = (a - c) `cross` (p - a)
+    h = P ab `cross` (p - b)
+    i = P bc `cross` (p - c)
+    j = P ca `cross` (p - a)

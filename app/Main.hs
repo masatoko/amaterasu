@@ -5,6 +5,7 @@ module Main where
 import Control.Monad (when, unless, forM_)
 import Data.Word (Word8)
 import qualified Data.Vector.Storable as V
+import qualified Data.Vector.Unboxed as U
 import Linear.Affine
 import Linear.V2
 import Linear.V4
@@ -118,9 +119,9 @@ renderEnv r polys boundary = do
 
 renderFov :: SDL.Renderer -> FieldOfView -> IO ()
 renderFov r (Fov eye tris) =
-  mapM_ renderTriangle tris
+  U.mapM_ renderTriangle tris
   where
-    renderTriangle (Tri a b c) = do
+    renderTriangle (a, b, c, _, _, _) = do
       SDL.drawLine r (f a) (f b)
       SDL.drawLine r (f b) (f c)
       SDL.drawLine r (f c) (f a)
