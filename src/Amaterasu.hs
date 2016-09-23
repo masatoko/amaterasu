@@ -83,7 +83,7 @@ makeFieldOfView_ eye aOrg' aRange polygons boundary =
 
 getFov :: Pos -> [[(Pos, Int)]] -> FieldOfView
 getFov eye ass0 =
-  Fov eye $ V.fromList . map (mkTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
+  Fov eye $ V.fromList . map (segToTri . snd) . catSegs . catMaybes $ zipWith work ass0 (tail ass0)
   where
     work :: [(Pos, Int)] -> [(Pos, Int)] -> Maybe (Int, Segment)
     work as bs =
@@ -102,12 +102,9 @@ getFov eye ass0 =
     connect :: Segment -> Segment -> Segment
     connect (Seg a _) (Seg _ b) = Seg a b
 
-    mkTri :: Segment -> Triangle
-    mkTri (Seg a b) = (eye, a, b, ea, ab, be)
-      where
-        P ea = a - eye
-        P ab = b - a
-        P be = eye - b
+    segToTri :: Segment -> Triangle
+    segToTri (Seg a b) = mkTri eye a b
+    
 --
 
 withinFov :: Shape -> FieldOfView -> Bool

@@ -110,6 +110,13 @@ cosOfTwoVec va vb = theta
     db = distance (pure 0) vb
     theta = min 1 $ va `dot` vb / (da * db)
 
+mkTri :: Pos -> Pos -> Pos -> Triangle
+mkTri a b c = (a, b, c, ab, bc, ca)
+  where
+    P ab = b - a
+    P bc = c - b
+    P ca = a - c
+
 withinTri :: Pos -> Triangle -> Bool
 withinTri p (a, b, c, ab, bc, ca) =
   h * i >= 0 && i * j >= 0 && j * h >= 0
