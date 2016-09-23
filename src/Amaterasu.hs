@@ -58,25 +58,16 @@ makeFieldOfView_ eye aOrg' aRange polygons boundary =
     -- Segments
     segs = rectToSegments boundary ++ concatMap polygonToSegments polygons
 
-    --
     rayIntersections :: [[(Pos, Int)]]
     rayIntersections = map findIntersections raysFromEye
       where
         findIntersections ray =
-          map reform $ sortBy compE $ mapMaybe work $ zip [0..] segs
+          map reform $ sortBy (comparing eval) $ mapMaybe work $ zip [0..] segs
           where
             work (idx, seg) =
               case intersectionRS ray seg of
                 Nothing  -> Nothing
                 Just pos -> Just (pos, idx, seg)
-
-            compE a b =
-              case compare a0 b0 of
-                EQ   -> compare a1 b1
-                ord0 -> ord0
-              where
-                (a0, a1) = eval a
-                (b0, b1) = eval b
 
             eval (pos, _, Seg p0 p1) = (e0, e1)
               where

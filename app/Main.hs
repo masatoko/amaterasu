@@ -5,7 +5,10 @@ module Main where
 import Control.Monad (when, unless, forM_)
 import Data.Word (Word8)
 import qualified Data.Vector.Storable as V
-import SDL.Vect
+import Linear.Affine
+import Linear.V2
+import Linear.V4
+import Linear.Vector
 import Data.Maybe (mapMaybe)
 
 import SDL (($=))
