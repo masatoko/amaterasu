@@ -1,5 +1,6 @@
 module Amaterasu
-( makeFieldOfView
+( makeObstacleInfo
+, makeFieldOfView
 , makeFieldOfView_
 , withinFov
 , FieldOfView (..)
@@ -25,13 +26,23 @@ import Safe (headMay)
 
 import Type
 
-makeFieldOfView :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> FieldOfView
-makeFieldOfView eye aOrg aRange polygons boundary =
-  let (_,_,fov) = makeFieldOfView_ eye aOrg aRange polygons boundary
+data ObstacleInfo =
+  ObstacleInfo [Pos] [Segment]
+  deriving Show
+
+makeObstacleInfo :: [Polygon] -> Rectangle -> ObstacleInfo
+makeObstacleInfo polygons boundary = ObstacleInfo ps segs
+  where
+    ps = rectToSidePoints boundary ++ concat polygons
+    segs = rectToSegments boundary ++ concatMap polygonToSegments polygons
+
+makeFieldOfView :: Pos -> Angle -> Angle -> ObstacleInfo -> FieldOfView
+makeFieldOfView eye aOrg aRange info =
+  let (_,_,fov) = makeFieldOfView_ eye aOrg aRange info
   in fov
 
-makeFieldOfView_ :: Pos -> Angle -> Angle -> [Polygon] -> Rectangle -> ([Angle], [Pos], FieldOfView)
-makeFieldOfView_ eye aOrg' aRange polygons boundary =
+makeFieldOfView_ :: Pos -> Angle -> Angle -> ObstacleInfo -> ([Angle], [Pos], FieldOfView)
+makeFieldOfView_ eye aOrg' aRange (ObstacleInfo ps segs) =
   (as, map fst (concat rayIntersections), fov)
   where
     adjustAng ang
@@ -50,14 +61,10 @@ makeFieldOfView_ eye aOrg' aRange polygons boundary =
         work x = x >= aOrg && x <= aDst
 
     -- Calculate angles
-    ps = rectToSidePoints boundary ++ concat polygons
     as = aOrg : angles ++ [aDst]
       where angles = sort $ mapMaybe (withinA . angleTo eye) ps
     raysFromEye =
       map (Ray eye . (eye +) . P . angle) as
-
-    -- Segments
-    segs = rectToSegments boundary ++ concatMap polygonToSegments polygons
 
     rayIntersections :: [[(Pos, Int)]]
     rayIntersections = map findIntersections raysFromEye
@@ -104,7 +111,7 @@ getFov eye ass0 =
 
     segToTri :: Segment -> Triangle
     segToTri (Seg a b) = mkTri eye a b
-    
+
 --
 
 withinFov :: Shape -> FieldOfView -> Bool

@@ -45,14 +45,18 @@ test renderer = do
         SDL.rendererDrawColor renderer $= V4 50 50 50 255
         SDL.clear renderer
 
-        -- 1. Make FieldOfView
-        let (as, its, fov) = makeFieldOfView_ eye angOrg angRange ps boundary
+        -- 1. Make ObstacleInfo
+        let info = makeObstacleInfo polys boundary
+
+        -- 2. Make FieldOfView
+        let (as, its, fov) = makeFieldOfView_ eye angOrg angRange info
+        -- let fov = makeFieldOfView eye angOrg angRange info -- If you need no information
 
         -- Rendering
-        renderEnv renderer ps boundary
+        renderEnv renderer polys boundary
         renderResult renderer eye as its fov
 
-        -- 2. Detection - Whether a rectangle is within FieldOfView
+        -- 3. Detection - Whether a rectangle is within FieldOfView
         forM_ shapes $ \shape -> do
           SDL.rendererDrawColor renderer $= V4 255 255 0 200
           when (shape `withinFov` fov) $ drawShape renderer shape
@@ -68,7 +72,7 @@ test renderer = do
   where
     eye0 = P $ V2 300 300
     boundary = Rectangle (pure 100) (pure 400)
-    ps = [p1, p2]
+    polys = [p1, p2]
     p1 = map P [V2 200 250, V2 400 200, V2 450 300, V2 350 350]
     p2 = map P [V2 150 200, V2 200 400]
     angRange = 300 / 180 * pi
