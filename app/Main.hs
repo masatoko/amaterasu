@@ -37,7 +37,7 @@ main = do
 test :: SDL.Renderer -> IO ()
 test renderer = do
   SDL.present renderer
-  let loop eyeDir eye = do
+  let loop eyeDir eyePos = do
         es <- SDL.pollEvents
         let eyeDir' = modifyEyeDir eyeDir es
             angOrg = fromIntegral eyeDir' / 180 * pi
@@ -49,8 +49,9 @@ test renderer = do
         let info = makeObstacleInfo polys boundary
 
         -- 2. Make FieldOfView
-        let (as, its, fov) = makeFieldOfView_ eye angOrg angRange info
-        -- let fov = makeFieldOfView eye angOrg angRange info -- If you need no information
+        let eye = Eye eyePos angOrg angRange
+            (as, its, fov) = makeFieldOfView_ eye info
+        -- let fov = makeFieldOfView eye info -- If you need no information
 
         -- Rendering
         renderEnv renderer polys boundary
@@ -95,7 +96,7 @@ modifyEyeDir dir es = (dir + dy) `mod` 360
 
 -----
 
-renderResult r eye as its fov = do
+renderResult r (Eye eye _ _) as its fov = do
   -- Angle
   forM_ as $ \a -> do
     let v = angle a ^* 1000

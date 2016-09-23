@@ -3,6 +3,7 @@ module Amaterasu
 , makeFieldOfView
 , makeFieldOfView_
 , withinFov
+, Eye (..)
 , FieldOfView (..)
 , Shape (..)
 -- , withinFov'
@@ -36,13 +37,15 @@ makeObstacleInfo polygons boundary = ObstacleInfo ps segs
     ps = rectToSidePoints boundary ++ concat polygons
     segs = rectToSegments boundary ++ concatMap polygonToSegments polygons
 
-makeFieldOfView :: Pos -> Angle -> Angle -> ObstacleInfo -> FieldOfView
-makeFieldOfView eye aOrg aRange info =
-  let (_,_,fov) = makeFieldOfView_ eye aOrg aRange info
-  in fov
+data Eye = Eye Pos Angle Angle
 
-makeFieldOfView_ :: Pos -> Angle -> Angle -> ObstacleInfo -> ([Angle], [Pos], FieldOfView)
-makeFieldOfView_ eye aOrg' aRange (ObstacleInfo ps segs) =
+makeFieldOfView :: Eye -> ObstacleInfo -> FieldOfView
+makeFieldOfView eye info = fov
+  where
+    (_,_,fov) = makeFieldOfView_ eye info
+
+makeFieldOfView_ :: Eye -> ObstacleInfo -> ([Angle], [Pos], FieldOfView)
+makeFieldOfView_ (Eye eye aOrg' aRange) (ObstacleInfo ps segs) =
   (as, map fst (concat rayIntersections), fov)
   where
     adjustAng ang
