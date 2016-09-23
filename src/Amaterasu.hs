@@ -45,15 +45,17 @@ makeFieldOfView eye info = fov
     (_,_,fov) = makeFieldOfView_ eye info
 
 makeFieldOfView_ :: Eye -> ObstacleInfo -> ([Angle], [Pos], FieldOfView)
-makeFieldOfView_ (Eye eye aOrg' aRange) (ObstacleInfo ps segs) =
+makeFieldOfView_ (Eye eye eyeDir eyeRange) (ObstacleInfo ps segs) =
   (as, map fst (concat rayIntersections), fov)
   where
     adjustAng ang
       | ang < 0       = adjustAng $ ang + 2 * pi
       | ang >= 2 * pi = adjustAng $ ang - 2 * pi
       | otherwise     = ang
-    aOrg = adjustAng aOrg'
-    aDst = aOrg + aRange
+
+    aOrg = adjustAng $ eyeDir - eyeRange / 2
+    aDst = aOrg + eyeRange
+
     withinA a
       | work a'    = Just a'
       | work a''   = Just a''
