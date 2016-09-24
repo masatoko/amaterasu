@@ -71,6 +71,21 @@ lineIntersection (a1, a2) (b1, b2) = P $ V2 x y
     x = x1 + ramda * (x2 - x1)
     y = y1 + ramda * (y2 - y1)
 
+intersectionSS :: Segment -> Segment -> Maybe Pos
+intersectionSS (Seg a1 a2) (Seg b1 b2)
+  | condA && condB = Just $ lineIntersection (a1, a2) (b1, b2)
+  | otherwise      = Nothing
+  where
+    a1a2 = a2 - a1
+    a1b1 = b1 - a1
+    a1b2 = b2 - a1
+    condA = (a1a2 `cross` a1b1) * (a1a2 `cross` a1b2) <= 0
+
+    b1b2 = b2 - b1
+    b1a1 = a1 - b1
+    b1a2 = a2 - b1
+    condB = (b1b2 `cross` b1a1) * (b1b2 `cross` b1a2) <= 0
+
 intersectionRS :: Ray -> Segment -> Maybe Pos
 intersectionRS ray@(Ray a1 a2) (Seg b1 b2)
   | dist1          = Just b1
