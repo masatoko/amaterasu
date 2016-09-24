@@ -3,6 +3,7 @@ module Amaterasu
 , makeFieldOfView
 , makeFieldOfView_
 , withinFov
+, withinTri
 , Eye (..)
 , FieldOfView (..)
 , Shape (..)
@@ -35,7 +36,9 @@ makeObstacleInfo :: [Polygon] -> Rectangle -> ObstacleInfo
 makeObstacleInfo polygons boundary = ObstacleInfo ps segs
   where
     ps = rectToSidePoints boundary ++ concat polygons
-    segs = rectToSegments boundary ++ concatMap polygonToSegments polygons
+    segsRect = rectToSegments boundary
+    segsPoly = concatMap polygonToSegments polygons
+    segs = segsRect ++ segsPoly
 
 data Eye = Eye Pos Angle Angle
 

@@ -57,11 +57,25 @@ isIntersectSeg (Seg a1 a2) (Seg b1 b2) =
     b1a2 = a2 - b1
     condB = (b1b2 `cross` b1a1) * (b1b2 `cross` b1a2) <= 0
 
+lineIntersection :: (Pos, Pos) -> (Pos, Pos) -> Pos
+lineIntersection (a1, a2) (b1, b2) = P $ V2 x y
+  where
+    P (V2 x1 y1) = a1
+    P (V2 x2 y2) = a2
+    P (V2 x3 y3) = b1
+    P (V2 x4 y4) = b2
+    --
+    ksi = (y4 - y3) * (x4 - x1) - (x4 - x3) * (y4 - y1)
+    delta = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3)
+    ramda = ksi / delta
+    x = x1 + ramda * (x2 - x1)
+    y = y1 + ramda * (y2 - y1)
+
 intersectionRS :: Ray -> Segment -> Maybe Pos
-intersectionRS ray@(Ray a1 a2) seg@(Seg b1 b2)
-  | dist1       = Just b1
-  | dist2       = Just b2
-  | condA && condB = Just intersection
+intersectionRS ray@(Ray a1 a2) (Seg b1 b2)
+  | dist1          = Just b1
+  | dist2          = Just b2
+  | condA && condB = Just $ lineIntersection (a1, a2) (b1, b2)
   | otherwise      = Nothing
   where
     dist1 = b1 `isOnRay` ray
@@ -80,16 +94,6 @@ intersectionRS ray@(Ray a1 a2) seg@(Seg b1 b2)
     b1a1 = a1 - b1
     condB = bb `cross` b1a1 >= 0
 
-    intersection = P $ V2 x y
-      where
-        Ray (P (V2 x1 y1)) (P (V2 x2 y2)) = ray
-        Seg (P (V2 x3 y3)) (P (V2 x4 y4)) = seg
-        --
-        ksi = (y4 - y3) * (x4 - x1) - (x4 - x3) * (y4 - y1)
-        delta = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3)
-        ramda = ksi / delta
-        x = x1 + ramda * (x2 - x1)
-        y = y1 + ramda * (y2 - y1)
 
 isOnRay :: Pos -> Ray -> Bool
 isOnRay pos (Ray r0 r1) =
@@ -124,3 +128,10 @@ withinTri p (a, b, c, ab, bc, ca) =
     h = P ab `cross` (p - b)
     i = P bc `cross` (p - c)
     j = P ca `cross` (p - a)
+
+posWithinRectangle :: Pos -> Rectangle -> Bool
+posWithinRectangle (P (V2 x y)) (Rectangle (P (V2 x0 y0)) (V2 w h)) =
+  x >= x0 && x <= x1 && y >= y0 && y <= y1
+  where
+    x1 = x0 + w
+    y1 = y0 + h

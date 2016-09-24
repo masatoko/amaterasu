@@ -73,12 +73,11 @@ test renderer = do
   where
     eye0 = P $ V2 300 300
     boundary = Rectangle (pure 100) (pure 400)
-    polys = [p1, p2]
+    polys = [p1, p2, p3, p4]
     p1 = map P [V2 200 250, V2 400 200, V2 450 300, V2 350 350]
     p2 = map P [V2 150 200, V2 200 400]
-    -- polys = [p3, p4]
-    -- p3 = map P [V2 200 200, V2 200 250]
-    -- p4 = map P [V2 400 400, V2 400 450]
+    p3 = map P [V2 50 300, V2 150 300]
+    p4 = map P [V2 50 400, V2 50 500]
     angRange = 300 / 180 * pi
     --
     shapes = [Point (P (V2 (5 * x) (5 * y))) | x <- [0..100],y <- [0..100]]
