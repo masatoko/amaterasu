@@ -16,7 +16,7 @@ module Amaterasu
 , Rectangle (..)
 ) where
 
-import Data.List (sort, sortBy, find)
+import Data.List (sort, sortBy, find, nub)
 import qualified Data.Vector.Unboxed as V
 import Linear.Affine
 import Linear.V2
@@ -35,10 +35,17 @@ data ObstacleInfo =
 makeObstacleInfo :: [Polygon] -> Rectangle -> ObstacleInfo
 makeObstacleInfo polygons boundary = ObstacleInfo ps segs
   where
-    ps = rectToSidePoints boundary ++ concat polygons
     segsRect = rectToSegments boundary
-    segsPoly = concatMap polygonToSegments polygons
+    segsPoly0 = concatMap polygonToSegments polygons
+    segsPoly = filter isInBnd $ concatMap (`cutBy` segsRect) segsPoly0
+      where
+        isInBnd (Seg a b) =
+          a `posWithinRectangle` boundary && b `posWithinRectangle` boundary
+
     segs = segsRect ++ segsPoly
+    ps = rectToSidePoints boundary ++ nub (concatMap segToPs segsPoly)
+      where
+        segToPs (Seg a b) = [a,b]
 
 data Eye = Eye Pos Angle Angle
 

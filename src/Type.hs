@@ -4,6 +4,9 @@ import qualified Data.Vector.Unboxed as V
 import Linear.Affine
 import Linear.V2
 import Linear.Metric
+import Data.List (sortBy)
+import Data.Ord (comparing)
+import Data.Maybe (mapMaybe)
 
 type Pos = Point V2 Double
 
@@ -150,3 +153,17 @@ posWithinRectangle (P (V2 x y)) (Rectangle (P (V2 x0 y0)) (V2 w h)) =
   where
     x1 = x0 + w
     y1 = y0 + h
+
+cutBy :: Segment -> [Segment] -> [Segment]
+cutBy a bs
+  | null ps   = [a]
+  | x == x'   = psToSegs $ sortBy (comparing yof) ps'
+  | otherwise = psToSegs $ sortBy (comparing xof) ps'
+  where
+    (Seg org@(P (V2 x y)) dst@(P (V2 x' y'))) = a
+    ps = mapMaybe (intersectionSS a) bs
+    ps' = org:ps ++ [dst]
+    xof (P (V2 x _)) = x
+    yof (P (V2 _ y)) = y
+    --
+    psToSegs ks = zipWith Seg ks (tail ks)
