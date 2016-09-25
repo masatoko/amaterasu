@@ -63,6 +63,13 @@ test renderer = do
           when (shape `withinFov` fov) $ drawShape renderer shape
         -- ===
 
+        -- instantVisTest
+        let ivtPos = P $ V2 105 105
+        when (instantVisTest info eyePos ivtPos) $ do
+          SDL.rendererDrawColor renderer $= V4 0 0 255 255
+          drawPoint renderer ivtPos
+        --
+
         SDL.present renderer
         SDL.delay 30
         let quit = shouldQuit es

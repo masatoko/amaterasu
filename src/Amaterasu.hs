@@ -4,6 +4,7 @@ module Amaterasu
 , makeFieldOfView_
 , withinFov
 , withinTri
+, instantVisTest
 , Eye (..)
 , FieldOfView (..)
 , Shape (..)
@@ -131,6 +132,12 @@ getFov eye ass0 =
 
     isPoint :: Segment -> Bool
     isPoint (Seg a b) = a == b
+
+instantVisTest :: ObstacleInfo -> Pos -> Pos -> Bool
+instantVisTest (ObstacleInfo _ as) a b =
+  not $ any (isIntersectSeg seg) as
+  where
+    seg = Seg a b
 
 --
 
