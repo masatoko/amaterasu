@@ -17,7 +17,7 @@ module Amaterasu
 , Rectangle (..)
 ) where
 
-import Data.List (sort, sortBy, find, nub)
+import Data.List (sort, sortBy, find, nub, tails)
 import qualified Data.Vector.Unboxed as V
 import Linear.Affine
 import Linear.V2
@@ -34,19 +34,30 @@ data ObstacleInfo =
   deriving Show
 
 makeObstacleInfo :: [Polygon] -> Rectangle -> ObstacleInfo
-makeObstacleInfo polygons boundary = ObstacleInfo ps segs
+makeObstacleInfo polygons boundary =
+  ObstacleInfo intersections segs
   where
+    segs = segsRect ++ segsPoly
     segsRect = rectToSegments boundary
-    segsPoly0 = concatMap polygonToSegments polygons
-    segsPoly = filter isInBnd $ concatMap (`cutBy` segsRect) segsPoly0
+    segsPoly = filter isInBnd . concatMap polygonToSegments $ polygons
       where
         isInBnd (Seg a b) =
-          a `posWithinRectangle` boundary && b `posWithinRectangle` boundary
+          a `posWithinRectangle` boundary || b `posWithinRectangle` boundary
 
-    segs = segsRect ++ segsPoly
+    intersections = filter (`posWithinRectangle` boundary) $ ps ++ ps'
     ps = rectToSidePoints boundary ++ nub (concatMap segToPs segsPoly)
       where
         segToPs (Seg a b) = [a,b]
+    ps' = segsIntersections segs
+
+    segsIntersections :: [Segment] -> [Pos]
+    segsIntersections []  = []
+    segsIntersections [a] = []
+    segsIntersections as  = concatMap work $ tails as
+      where
+        work []  = []
+        work [_] = []
+        work (x:xs) = mapMaybe (intersectionSS x) xs
 
 data Eye = Eye Pos Angle Angle
 
