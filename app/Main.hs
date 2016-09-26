@@ -46,7 +46,7 @@ test renderer = do
         SDL.clear renderer
 
         -- 1. Make ObstacleInfo
-        let info = makeObstacleInfo polys boundary
+        let info = makeObstacleInfo HasIntersection polys boundary
 
         -- 2. Make FieldOfView
         let eye = Eye eyePos angOrg angRange

@@ -1,5 +1,7 @@
 module Amaterasu
-( makeObstacleInfo
+( ObstacleInfo
+, ObstacleOption (..)
+, makeObstacleInfo
 , makeFieldOfView
 , makeFieldOfView_
 , withinFov
@@ -34,8 +36,13 @@ data ObstacleInfo =
   ObstacleInfo [Pos] [Segment]
   deriving Show
 
-makeObstacleInfo :: [Polygon] -> Rectangle -> ObstacleInfo
-makeObstacleInfo polygons boundary =
+data ObstacleOption
+  = HasIntersection
+  | IgnoreIntersection
+  deriving (Eq, Show)
+
+makeObstacleInfo :: ObstacleOption -> [Polygon] -> Rectangle -> ObstacleInfo
+makeObstacleInfo opt polygons boundary =
   ObstacleInfo intersections segs
   where
     segs = segsRect ++ segsPoly
@@ -49,7 +56,9 @@ makeObstacleInfo polygons boundary =
     ps = rectToSidePoints boundary ++ nub (concatMap segToPs segsPoly)
       where
         segToPs (Seg a b) = [a,b]
-    ps' = segsIntersections segs
+    ps' = case opt of
+            HasIntersection    -> segsIntersections segs
+            IgnoreIntersection -> []
 
     segsIntersections :: [Segment] -> [Pos]
     segsIntersections []  = []
