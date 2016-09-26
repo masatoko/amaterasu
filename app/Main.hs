@@ -70,6 +70,10 @@ test renderer = do
           drawPoint renderer ivtPos
         --
 
+        -- VisibleSegments
+        SDL.rendererDrawColor renderer $= V4 255 0 0 255
+        mapM_ (drawSegment renderer) $ visibleSegments fov
+
         SDL.present renderer
         SDL.delay 30
         let quit = shouldQuit es
@@ -149,6 +153,11 @@ drawPoint r pos = mapM_ work ps
     pos' = round <$> pos
     ps = map (pos' +) [P (V2 dx dy) | dx <- [-3,3], dy <- [-3,3]]
     work = SDL.drawLine r pos'
+
+drawSegment :: SDL.Renderer -> Segment -> IO ()
+drawSegment r (Seg a b) = SDL.drawLine r (f a) (f b)
+  where
+    f = fmap round
 
 drawPolygon :: SDL.Renderer -> Polygon -> IO ()
 drawPolygon r ps@(p0:_) =

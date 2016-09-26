@@ -5,6 +5,7 @@ module Amaterasu
 , withinFov
 , withinTri
 , instantVisTest
+, visibleSegments
 , Eye (..)
 , FieldOfView (..)
 , Shape (..)
@@ -149,6 +150,12 @@ instantVisTest (ObstacleInfo _ as) a b =
   not $ any (isIntersectSeg seg) as
   where
     seg = Seg a b
+
+visibleSegments :: FieldOfView -> [Segment]
+visibleSegments (Fov _ ts) =
+  map fromTri $ V.toList ts
+  where
+    fromTri (_,b,c,_,_,_) = Seg b c
 
 --
 
