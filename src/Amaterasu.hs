@@ -39,21 +39,19 @@ data ObstacleInfo =
 
 data ObstacleOption
   = HasIntersection
+  | OnlyPolysAndBoundary
   | IgnoreIntersection
   deriving (Eq, Show)
 
 makeObstacleInfo :: ObstacleOption -> [Polygon] -> Rectangle -> ObstacleInfo
-makeObstacleInfo opt polygons boundary =
-  case opt of
-    IgnoreIntersection -> let
-      ps = makeIntersections segs
-      in ObstacleInfo ps segs
-    HasIntersection -> let
-      segs' = makeNoIntersectionSegs segs
-      ps = makeIntersections segs'
-      in ObstacleInfo ps segs'
+makeObstacleInfo opt polygons boundary = let
+  segs = case opt of
+    IgnoreIntersection   -> segs0
+    OnlyPolysAndBoundary -> segsRect ++ (concatMap (`cutBy` segsRect) segsPoly)
+    HasIntersection      -> makeNoIntersectionSegs segs0
+  in ObstacleInfo (makeIntersections segs) segs
   where
-    segs = segsRect ++ segsPoly
+    segs0 = segsRect ++ segsPoly
     segsRect = rectToSegments boundary
     segsPoly = filter isInBnd . concatMap polygonToSegments $ polygons
       where
