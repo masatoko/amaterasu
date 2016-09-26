@@ -4,7 +4,7 @@ import qualified Data.Vector.Unboxed as V
 import Linear.Affine
 import Linear.V2
 import Linear.Metric
-import Data.List (sortBy)
+import Data.List (sortBy, tails)
 import Data.Ord (comparing)
 import Data.Maybe (mapMaybe)
 
@@ -167,3 +167,12 @@ cutBy a bs
     yof (P (V2 _ y)) = y
     --
     psToSegs ks = zipWith Seg ks (tail ks)
+
+makeNoIntersectionSegs :: [Segment] -> [Segment]
+makeNoIntersectionSegs as =
+  concatMap work $ tails as
+  where
+    work :: [Segment] -> [Segment]
+    work []  = []
+    work [x] = [x]
+    work (x:xs) = x `cutBy` xs

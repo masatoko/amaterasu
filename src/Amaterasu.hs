@@ -11,6 +11,7 @@ module Amaterasu
 , Eye (..)
 , FieldOfView (..)
 , Shape (..)
+, makeNoIntersectionSegs
 -- , withinFov'
 --
 , Pos
@@ -43,7 +44,14 @@ data ObstacleOption
 
 makeObstacleInfo :: ObstacleOption -> [Polygon] -> Rectangle -> ObstacleInfo
 makeObstacleInfo opt polygons boundary =
-  ObstacleInfo intersections segs
+  case opt of
+    IgnoreIntersection -> let
+      ps = makeIntersections segs
+      in ObstacleInfo ps segs
+    HasIntersection -> let
+      segs' = makeNoIntersectionSegs segs
+      ps = makeIntersections segs'
+      in ObstacleInfo ps segs'
   where
     segs = segsRect ++ segsPoly
     segsRect = rectToSegments boundary
@@ -52,22 +60,9 @@ makeObstacleInfo opt polygons boundary =
         isInBnd (Seg a b) =
           a `posWithinRectangle` boundary || b `posWithinRectangle` boundary
 
-    intersections = filter (`posWithinRectangle` boundary) $ ps ++ ps'
-    ps = rectToSidePoints boundary ++ nub (concatMap segToPs segsPoly)
+    makeIntersections = nub . concatMap segToPs
       where
         segToPs (Seg a b) = [a,b]
-    ps' = case opt of
-            HasIntersection    -> segsIntersections segs
-            IgnoreIntersection -> []
-
-    segsIntersections :: [Segment] -> [Pos]
-    segsIntersections []  = []
-    segsIntersections [a] = []
-    segsIntersections as  = concatMap work $ tails as
-      where
-        work []  = []
-        work [_] = []
-        work (x:xs) = mapMaybe (intersectionSS x) xs
 
 data Eye = Eye Pos Angle Angle
 
