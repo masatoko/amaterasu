@@ -21,6 +21,9 @@ module Amaterasu
 , Rectangle (..)
 ) where
 
+import Debug.Trace (trace)
+
+import Control.Monad (join)
 import Data.List (sort, sortBy, find, nub, tails)
 import qualified Data.Vector.Unboxed as V
 import Linear.Affine
@@ -47,7 +50,7 @@ makeObstacleInfo :: ObstacleOption -> [Polygon] -> Rectangle -> ObstacleInfo
 makeObstacleInfo opt polygons boundary = let
   segs = case opt of
     IgnoreIntersection   -> segs0
-    OnlyPolysAndBoundary -> segsRect ++ (concatMap (`cutBy` segsRect) segsPoly)
+    OnlyPolysAndBoundary -> segsRect ++ concatMap (`cutBy` segsRect) segsPoly
     HasIntersection      -> makeNoIntersectionSegs segs0
   in ObstacleInfo (makeIntersections segs) segs
   where
@@ -93,28 +96,20 @@ makeFieldOfView_ (Eye eye eyeDir eyeRange) (ObstacleInfo ps segs) =
     -- Calculate angles
     as = aOrg : angles ++ [aDst]
       where angles = sort $ mapMaybe (withinA . angleTo eye) ps
-    raysFromEye =
-      map (Ray eye . (eye +) . P . angle) as
+    raysFromEye = map work as
+      where
+        work = Ray eye . (eye +) . P . angle
 
     rayIntersections :: [[(Pos, Int)]]
     rayIntersections = map findIntersections raysFromEye
       where
         findIntersections ray =
-          map reform $ sortBy (comparing eval) $ mapMaybe work $ zip [0..] segs
+          mapMaybe work $ zip [0..] segs
           where
             work (idx, seg) =
               case intersectionRS ray seg of
                 Nothing  -> Nothing
-                Just pos -> Just (pos, idx, seg)
-
-            eval (pos, _, Seg p0 p1) = (e0, e1)
-              where
-                e0 = eye `qd` pos
-                P v1 = pos - eye
-                P v2 = if pos == p0 then p1 - p0 else p0 - p1
-                e1 = v1 `cosOfTwoVec` v2
-
-            reform (pos, idx, seg) = (pos, idx)
+                Just pos -> Just (pos, idx)
 
     fov = getFov eye rayIntersections
 
@@ -123,11 +118,13 @@ getFov eye ass0 =
   Fov eye $ V.fromList . toTriangles . catMaybes $ zipWith work ass0 (tail ass0)
   where
     work :: [(Pos, Int)] -> [(Pos, Int)] -> Maybe (Int, Segment)
-    work as bs =
-      headMay $ mapMaybe go as
+    work as bs = closest $ mapMaybe make as
       where
-        go a@(p,i) =
-          (\b -> (i, Seg (fst a) (fst b))) <$> find ((== i) . snd) bs
+        make a@(pa,ia) = (\(pb,_) -> (ia, Seg pa pb)) <$> find ((== ia) . snd) bs
+        closest = headMay . sortBy (comparing quad)
+          where
+            quad (_,p) = eye `qd` center p
+            center (Seg a b) = (a + b) ^/ 2
 
     toTriangles = map (segToTri . snd) . filter (not . isPoint . snd) . catSegs
 
