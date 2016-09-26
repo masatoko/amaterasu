@@ -50,11 +50,18 @@ makeObstacleInfo :: ObstacleOption -> [Polygon] -> Rectangle -> ObstacleInfo
 makeObstacleInfo opt polygons boundary = let
   segs = case opt of
     IgnoreIntersection   -> segs0
-    OnlyPolysAndBoundary -> segsRect ++ concatMap (`cutBy` segsRect) segsPoly
-    HasIntersection      -> makeNoIntersectionSegs segs0
+    OnlyPolysAndBoundary ->
+      let work seg = let
+            (pCut, ss) = seg `cutBy` segsRect
+            in if pCut
+                 then filter isInBndComp ss
+                 else ss
+      in segsRect ++ concatMap work segsPoly
+    HasIntersection      ->
+      filter isInBndComp $ makeNoIntersectionSegs segs0
   in ObstacleInfo (makeIntersections segs) segs
   where
-    segs0 = segsRect ++ segsPoly
+    segs0 = segsPoly ++ segsRect
     segsRect = rectToSegments boundary
     segsPoly = filter isInBnd . concatMap polygonToSegments $ polygons
       where
@@ -64,6 +71,9 @@ makeObstacleInfo opt polygons boundary = let
     makeIntersections = nub . concatMap segToPs
       where
         segToPs (Seg a b) = [a,b]
+
+    isInBndComp (Seg a b) =
+      a `posWithinRectangle` boundary && b `posWithinRectangle` boundary
 
 data Eye = Eye Pos Angle Angle
 

@@ -156,12 +156,12 @@ posWithinRectangle (P (V2 x y)) (Rectangle (P (V2 x0 y0)) (V2 w h)) =
     x1 = x0 + w
     y1 = y0 + h
 
-cutBy :: Segment -> [Segment] -> [Segment]
+cutBy :: Segment -> [Segment] -> (Bool, [Segment])
 cutBy a bs
-  | null ps   = [a]
-  | x /= x'   = work $ sortBy (comparing xOf) ps'
-  | y /= y'   = work $ sortBy (comparing yOf) ps'
-  | otherwise = [a]
+  | null ps   = (False, [a])
+  | x /= x'   = (,) True $ work $ sortBy (comparing xOf) ps'
+  | y /= y'   = (,) True $ work $ sortBy (comparing yOf) ps'
+  | otherwise = (False, [a])
   where
     (Seg org@(P (V2 x y)) dst@(P (V2 x' y'))) = a
     ps = mapMaybe (intersectionSS a) bs
@@ -180,4 +180,4 @@ makeNoIntersectionSegs as =
     work :: [Segment] -> [Segment]
     work []  = []
     work [x] = [x]
-    work (x:xs) = x `cutBy` xs
+    work (x:xs) = snd $ x `cutBy` xs
