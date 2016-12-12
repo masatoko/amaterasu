@@ -7,6 +7,7 @@ module Amaterasu
 , withinFov
 , withinTri
 , instantVisTest
+, intersections
 , visibleSegments
 , Eye (..)
 , FieldOfView (..)
@@ -157,6 +158,12 @@ getFov eye ass0 =
 instantVisTest :: ObstacleInfo -> Pos -> Pos -> Bool
 instantVisTest (ObstacleInfo _ as) a b =
   not $ any (isIntersectSeg seg) as
+  where
+    seg = Seg a b
+
+intersections :: ObstacleInfo -> Pos -> Pos -> [Pos]
+intersections (ObstacleInfo _ as) a b =
+  mapMaybe (intersectionSS seg) as
   where
     seg = Seg a b
 
